@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GS-Diff: Scene Change Detection in 3D Gaussian Splatting</title>
+  <meta name="description" content="GS-Diff: From Pixels to Primitives — Scene Change Detection directly in 3D Gaussian Splatting primitive space. ~17% mIoU improvement over prior state-of-the-art." />
+
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" />
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="static/css/index.css" />
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════
+     NAVBAR
+════════════════════════════════════════════ -->
+<nav class="navbar is-white is-fixed-top" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" data-target="navMenu" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div id="navMenu" class="navbar-menu">
+    <div class="navbar-start" style="flex-grow:1; justify-content:center; display:flex;">
+      <a class="navbar-item" href="#" style="font-weight:700; color:var(--primary);">GS-DIFF</a>
+      <a class="navbar-item" href="#abstract">Abstract</a>
+      <a class="navbar-item" href="#method">Method</a>
+      <a class="navbar-item" href="#results">Results</a>
+      <a class="navbar-item" href="#videos">Videos</a>
+      <a class="navbar-item" href="#disambiguation">Disambiguation</a>
+      <a class="navbar-item" href="#bibtex">BibTeX</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     HERO
+════════════════════════════════════════════ -->
+<section class="hero is-dark is-medium" style="padding-top:3.5rem;">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-2 publication-title">
+            From Pixels to Primitives: Scene Change Detection<br />in 3D Gaussian Splatting
+          </h1>
+          <div class="is-size-5 publication-authors" style="margin-top:1.25rem; line-height:1.6;">
+            <span class="author-block"><a href="https://chumsy0725.github.io" target="_blank">Chamuditha Jayanga Galappaththige</a><sup>1,2</sup>,&nbsp;</span>
+            <span class="author-block"><a href="#">Jason Lai</a><sup>3</sup>,&nbsp;</span>
+            <span class="author-block"><a href="#">Timothy Patten</a><sup>2,4</sup>,&nbsp;</span>
+            <span class="author-block"><a href="#">Donald Dansereau</a><sup>2,3</sup></span>
+            <br />
+            <span class="author-block"><a href="#">Niko Suenderhauf</a><sup>1,2</sup>,&nbsp;</span>
+            <span class="author-block"><a href="#">Dimity Miller</a><sup>1,2</sup></span>
+          </div>
+          <div class="is-size-6 publication-venue" style="margin-top:.5rem;">
+            <sup>1</sup>QUT Centre for Robotics &nbsp;&bull;&nbsp;
+            <sup>2</sup>ARIAM &nbsp;&bull;&nbsp;
+            <sup>3</sup>ACFR, University of Sydney &nbsp;&bull;&nbsp;
+            <sup>4</sup>Abyss Solutions
+          </div>
+
+          <!-- Link buttons -->
+          <div class="publication-links" style="margin-top:1.5rem;">
+            <!-- Paper PDF -->
+            <span class="link-block">
+              <a href="static/pdfs/paper.pdf" target="_blank"
+                 class="button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                <span>Paper</span>
+              </a>
+            </span>
+            <!-- arXiv coming soon -->
+            <span class="link-block">
+              <a class="button is-normal is-rounded is-dark" style="opacity:.55; cursor:default;" disabled>
+                <span class="icon"><i class="ai ai-arxiv"></i></span>
+                <span>arXiv (Coming Soon)</span>
+              </a>
+            </span>
+            <!-- Code repo (Coming Soon) -->
+            <span class="link-block">
+              <a href="https://github.com/Chumsy0725/GS-DIFF" target="_blank" class="button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fab fa-github"></i></span>
+                <span>Code (Coming Soon)</span>
+              </a>
+            </span>
+            <!-- Hugging Face coming soon -->
+            <span class="link-block">
+              <a class="button is-normal is-rounded is-dark" style="opacity:.55; cursor:default;" disabled>
+                <span class="icon">🤗</span>
+                <span>Annotations(Coming Soon)</span>
+              </a>
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     TEASER  –  SCENE VIDEOS
+════════════════════════════════════════════ -->
+<section class="section" id="videos">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.5rem;">
+      <h2 class="section-title">Scene Visualizations</h2>
+      <div class="section-divider"></div>
+      <p style="color:#6b7280; font-size:.95rem;">
+        Rendered reference view, inference view, and GS-Diff change map for each scene.
+      </p>
+    </div>
+
+    <!-- Tab buttons: Zen (default), Garden, Lounge, Meeting Room -->
+    <div class="video-tab-buttons">
+      <button class="video-tab-btn" data-scene="zen">Zen</button>
+      <button class="video-tab-btn" data-scene="garden">Garden</button>
+      <button class="video-tab-btn" data-scene="lounge">Lounge</button>
+      <button class="video-tab-btn" data-scene="meeting_room">Meeting Room</button>
+    </div>
+
+    <!-- Video panels -->
+    <div class="video-panel" data-scene="zen">
+      <video autoplay muted loop playsinline>
+        <source src="static/videos/zen.mp4" type="video/mp4" />
+      </video>
+      <p class="video-caption"><strong>Zen</strong> — Outdoor scene with complex background texture; GS-DIFF's change maps are multi-view consistent by construction.</p>
+    </div>
+    <div class="video-panel" data-scene="garden">
+      <video autoplay muted loop playsinline>
+        <source src="static/videos/garden.mp4" type="video/mp4" />
+      </video>
+      <p class="video-caption"><strong>Garden</strong> — Dense outdoor scene; GS-DIFF's can capture even thing structural changes such as the tail of the toy monkey.</p>
+    </div>
+    <div class="video-panel" data-scene="lounge">
+      <video autoplay muted loop playsinline>
+        <source src="static/videos/lounge.mp4" type="video/mp4" />
+      </video>
+      <p class="video-caption"><strong>Lounge</strong> — GS-DIFF performs similarly well in both indoor and outdoor scenes.</p>
+    </div>
+    <div class="video-panel" data-scene="meeting_room">
+      <video autoplay muted loop playsinline>
+        <source src="static/videos/meeting_room.mp4" type="video/mp4" />
+      </video>
+      <p class="video-caption"><strong>Meeting Room</strong> — A scene with many non-Lambertian surfaces where accurate geometric reconstruction is inherently hard.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ABSTRACT
+════════════════════════════════════════════ -->
+<section class="section is-light-alt" id="abstract" style="padding: 2rem 1.5rem;">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered">
+      <h2 class="section-title">Abstract</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="columns is-centered" style="margin-top:1rem;">
+      <div class="column is-two-thirds">
+        <p>
+          Scene change detection methods built on Gaussian splatting universally follow a
+          <em>render-then-compare</em> paradigm: the pre-change scene is rendered into 2D and
+          compared against post-change images via pixel or feature residuals. This
+          <em>change detection problem with Gaussian Splatting has been treated as a question
+          about pixels; we treat it as a question about primitives.</em> We provide direct
+          evidence that native primitive attributes alone — position, anisotropic covariance,
+          and color — carry sufficient signal for scene change detection.
+        </p>
+        <p>
+          What makes primitive-space comparison hard is the under-constrained nature of
+          Gaussian splatting representation: independent optimisations yield primitive solutions
+          whose count, positions, shapes, and colors differ even where nothing has changed.
+          We address this challenge with anisotropic models of geometric and photometric drift,
+          complemented by a per-primitive observability term that reflects the extent to which
+          each Gaussian is constrained by the camera geometry.
+        </p>
+        <p>
+          Operating directly on primitives gives our method, <strong>GS-Diff</strong>, two
+          properties that distinguish it from render-then-compare methods. First, change maps
+          are <strong>multi-view consistent by construction</strong>, where prior work had to
+          learn this through an additional optimisation objective. Second, geometric and
+          appearance changes are scored separately, identifying not just <em>where</em> but
+          <em>what kind of</em> change occurred — distinguishing structural changes (e.g., an
+          added object) from surface-level ones (e.g., a color change) without supervision or
+          external model dependencies. On real-world benchmarks, GS-Diff surpasses the prior
+          state-of-the-art approach by <strong>~17% in mean Intersection over Union</strong>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PARADIGM FIGURE
+════════════════════════════════════════════ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.25rem;">
+      <h2 class="section-title">From Pixels to Primitives</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="figure-wrap">
+      <img src="static/images/paradigm.png" alt="Paradigm comparison: render-then-compare vs primitive-space comparison" />
+    </div>
+    <p class="figure-caption">
+      <strong>Figure 1.</strong> Prior multi-view SCD methods question <em>pixels</em>, comparing rendered viewpoint pairs
+      in image space and learning to aggregate change evidence scattered across viewpoints (bottom).
+      GS-Diff questions <em>primitives</em>, comparing two 3DGS reconstructions directly in primitive space (top).
+      Multi-view consistency emerges <em>by construction</em> from the shared 3D representation,
+      eliminating both per-view comparison and learned aggregation.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     HIGHLIGHTS
+════════════════════════════════════════════ -->
+<section class="section is-light-alt">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:2rem;">
+      <h2 class="section-title">Highlights</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="columns is-multiline is-centered">
+
+      <div class="column is-half-tablet is-one-quarter-desktop">
+        <div class="highlight-card">
+          <div class="icon-wrap"><i class="fas fa-cube"></i></div>
+          <h3>Primitive-Space SCD</h3>
+          <p>First method to detect scene changes directly in 3DGS primitive space — no rendering, no image comparison.</p>
+        </div>
+      </div>
+
+      <div class="column is-half-tablet is-one-quarter-desktop">
+        <div class="highlight-card">
+          <div class="icon-wrap"><i class="fas fa-shapes"></i></div>
+          <h3>Primitives Alone Are Sufficient</h3>
+          <p>Uses only native Gaussian attributes — position, covariance, and color — requiring no foundation models or external training.</p>
+        </div>
+      </div>
+
+      <div class="column is-half-tablet is-one-quarter-desktop">
+        <div class="highlight-card">
+          <div class="icon-wrap"><i class="fas fa-chart-line"></i></div>
+          <h3>State-of-the-Art</h3>
+          <div class="stat-badge">+17% mIoU</div>
+          <p>Surpasses the strongest prior method on the PASLCD benchmark.</p>
+        </div>
+      </div>
+
+      <div class="column is-half-tablet is-one-quarter-desktop">
+        <div class="highlight-card">
+          <div class="icon-wrap"><i class="fas fa-layer-group"></i></div>
+          <h3>Change Disambiguation</h3>
+          <p>Inherently separates <em>structural</em> from <em>surface-level</em> changes without supervision or auxiliary models.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     METHOD
+════════════════════════════════════════════ -->
+<section class="section" id="method">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.25rem;">
+      <h2 class="section-title">Method</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="figure-wrap">
+      <img src="static/images/pipeline.png" alt="GS-Diff pipeline overview" />
+    </div>
+    <p class="figure-caption">
+      <strong>Figure 2.</strong> The GS-Diff pipeline. We model the expected geometric and photometric drift between
+      3DGS representations, using the inflated covariance of each primitive to find its cross-scene neighbour set.
+      A <em>geometric kernel</em> and <em>appearance kernel</em> evaluate change over the neighbour set to compute
+      drift-aware change scores. These change scores are combined and weighted by observation uncertainty,
+      and can then be rendered as change score maps for any viewpoint.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     RESULTS
+════════════════════════════════════════════ -->
+<section class="section is-light-alt" id="results">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.5rem;">
+      <h2 class="section-title">Results</h2>
+      <div class="section-divider"></div>
+    </div>
+
+    <!-- Main results table -->
+    <h3 class="has-text-centered has-text-weight-bold is-size-5" style="margin-bottom:1rem; font-family:'Raleway',sans-serif;">
+      Quantitative Results on PASLCD
+    </h3>
+    <p class="has-text-centered" style="color:#6b7280; font-size:.9rem; margin-bottom:1.25rem;">
+      GS-Diff is the only method that reaches state-of-the-art performance <em>without external learned features</em>
+      and with multi-view (MV) consistency as an <em>inherent property</em>. Best in <strong>bold</strong>, second best <u>underlined</u>.
+    </p>
+    <div class="table-container" style="overflow-x:auto;">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th style="text-align:left !important;">Method</th>
+            <th>No Learned Feat.</th>
+            <th>MV Consistency</th>
+            <th>mIoU &uarr;</th>
+            <th>F1 &uarr;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:left !important;">CYWS-2D</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>—</td>
+            <td>0.273</td>
+            <td>0.398</td>
+          </tr>
+          <tr>
+            <td style="text-align:left !important;">GeSCD</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>—</td>
+            <td>0.477</td>
+            <td>0.611</td>
+          </tr>
+          <tr>
+            <td style="text-align:left !important;">SplatPose+</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>—</td>
+            <td>0.237</td>
+            <td>0.358</td>
+          </tr>
+          <tr class="midrule">
+            <td style="text-align:left !important;">SCAR-3D</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>Learned</td>
+            <td>0.191</td>
+            <td>0.289</td>
+          </tr>
+          <tr>
+            <td style="text-align:left !important;">3DGS-CD</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>Learned</td>
+            <td>0.209</td>
+            <td>0.339</td>
+          </tr>
+          <tr>
+            <td style="text-align:left !important;">MV3DCD</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>Learned</td>
+            <td>0.478</td>
+            <td>0.628</td>
+          </tr>
+          <tr>
+            <td style="text-align:left !important;">O-SCD</td>
+            <td><span class="cross">&#10008;</span></td>
+            <td>Learned</td>
+            <td class="second">0.552</td>
+            <td class="second">0.694</td>
+          </tr>
+          <tr class="ours midrule">
+            <td style="text-align:left !important; font-weight:700;">GS-Diff (ours)</td>
+            <td><span class="check">&#10004;</span></td>
+            <td>By Construction</td>
+            <td class="bold">0.644</td>
+            <td class="bold">0.758</td>
+          </tr>
+          <tr class="ours">
+            <td style="text-align:left !important; font-weight:700;">GS-Diff Oracle</td>
+            <td><span class="check">&#10004;</span></td>
+            <td>By Construction</td>
+            <td>0.669</td>
+            <td>0.779</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Component analysis table -->
+    <div style="margin-top:2.5rem;">
+      <h3 class="has-text-centered has-text-weight-bold is-size-5" style="margin-bottom:.5rem; font-family:'Raleway',sans-serif;">
+        Component Analysis
+      </h3>
+      <p class="has-text-centered" style="color:#6b7280; font-size:.9rem; margin-bottom:1.25rem;">
+        Each row introduces one design choice cumulatively. Drift modeling is the dominant contributor to performance.
+      </p>
+      <div class="table-container" style="overflow-x:auto;">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th style="text-align:center;">Phase</th>
+              <th style="text-align:left !important;">Variant</th>
+              <th>mIoU &uarr;</th>
+              <th>Oracle mIoU</th>
+              <th>Rel. Gap (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><em>Naïve</em></td>
+              <td style="text-align:left !important;">Euclidean NN (position + color)</td>
+              <td>0.110</td><td>0.285</td><td>61.4</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="text-align:left !important;">Normalized Mahalanobis, raw &Sigma; + Euclidean NN color</td>
+              <td>0.034</td><td>0.266</td><td>87.2</td>
+            </tr>
+            <tr class="midrule">
+              <td><em>Kernel</em></td>
+              <td style="text-align:left !important;">Unnormalized Mahalanobis, raw &Sigma; + Euclidean NN color</td>
+              <td>0.096</td><td>0.415</td><td>76.9</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="text-align:left !important;">Unnormalized Mahalanobis + fixed RBF color (&sigma;<sub>c</sub>=0.5)</td>
+              <td>0.102</td><td>0.422</td><td>75.8</td>
+            </tr>
+            <tr class="midrule">
+              <td><em>Drift</em></td>
+              <td style="text-align:left !important;">+ representation ambiguity inflation <strong>U</strong></td>
+              <td>0.258</td><td>0.536</td><td>51.9</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="text-align:left !important;">+ observation uncertainty via FIM</td>
+              <td>0.465</td><td>0.611</td><td>23.9</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="text-align:left !important;">+ data-driven appearance bandwidth &sigma;<sub>c</sub></td>
+              <td>0.537</td><td>0.629</td><td>14.6</td>
+            </tr>
+            <tr class="ours">
+              <td></td>
+              <td style="text-align:left !important; font-weight:700;">+ confidence weighting &omega;<sub>i</sub> (full GS-Diff)</td>
+              <td class="bold">0.644</td>
+              <td class="bold">0.669</td>
+              <td class="bold">3.7</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     CHANGE DISAMBIGUATION
+════════════════════════════════════════════ -->
+<section class="section" id="disambiguation">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.25rem;">
+      <h2 class="section-title">Change Disambiguation</h2>
+      <div class="section-divider"></div>
+      <p style="color:#6b7280; font-size:.95rem; max-width:680px; margin:0 auto;">
+        GS-Diff inherently separates <strong>structural</strong> changes (geometry mismatch)
+        from <strong>surface-level</strong> changes (appearance only) by keeping the geometric
+        and appearance kernel scores separate — no supervision or auxiliary models required.
+      </p>
+    </div>
+
+    <div class="figure-wrap" style="margin-top:1.5rem;">
+      <img src="static/images/structure_surface.png" alt="Structural vs surface-level change disambiguation" />
+    </div>
+    <p class="figure-caption">
+      <strong>Figure 4.</strong> Change disambiguation results. GS-Diff correctly routes changed pixels
+      to structural (e.g., added/removed objects) or surface-level (e.g., repainted surface) categories
+      without any supervised training signal.
+    </p>
+
+    <div style="margin-top:2rem;">
+      <h3 class="has-text-centered has-text-weight-bold is-size-5" style="margin-bottom:.5rem; font-family:'Raleway',sans-serif;">
+        Disambiguation Routing on PASLCD
+      </h3>
+      <p class="has-text-centered" style="color:#6b7280; font-size:.9rem; margin-bottom:1.25rem;">
+        Balanced accuracy is the primary metric. GS-Diff achieves 0.87 balanced accuracy with high per-class recall.
+        Results are near-identical for Fixed and Oracle thresholds, confirming routing is decoupled from threshold tuning.
+      </p>
+      <div class="table-container" style="overflow-x:auto;">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th style="text-align:left !important;">Thresholding</th>
+              <th>Balanced Acc.</th>
+              <th>Structural Prec.</th>
+              <th>Structural Rec.</th>
+              <th>Surface Prec.</th>
+              <th>Surface Rec.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align:left !important;">Fixed (0.5)</td>
+              <td class="bold">0.868</td>
+              <td>0.970</td><td>0.961</td><td>0.725</td><td>0.774</td>
+            </tr>
+            <tr>
+              <td style="text-align:left !important;">Oracle</td>
+              <td>0.866</td>
+              <td>0.968</td><td>0.959</td><td>0.726</td><td>0.773</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     COMPARISON WITH BASELINES
+════════════════════════════════════════════ -->
+<section class="section is-light-alt">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.25rem;">
+      <h2 class="section-title">Comparison with Baselines</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="figure-wrap">
+      <img src="static/images/oscd_comparison.png" alt="Qualitative comparison with prior methods" />
+    </div>
+    <p class="figure-caption">
+      <strong>Figure 5.</strong> Qualitative comparison with prior state-of-the-art render-then-compare methods. GS-DIFF
+      produces more geometrically accurate change masks for two reasons. (1) <em>Patch granularity</em>: image-space approaches compare features from an external vision foundation model at its
+      patch size (14 × 14 or 16 × 16 in pixels), which sets a floor on spatial resolution; primitive-space
+      comparison is limited only by the fidelity of the representation itself. (2) <em>Multi-view aggregation</em>: learned multi-view objective converges to a consensus across views, smoothing the boundary
+      in any single view; GS-DIFF's per-primitive scores are multi-view consistent by construction and
+      preserve view-specific sharpness. The bottom row additionally shows our kernels detecting a
+      surface-level change between semantically similar objects (bowl recolored pink-to-blue), which
+      image-space methods often misses, as foundation-model features are largely invariant to such fine appearance changes
+      in semantically similar objects.
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     BIBTEX
+════════════════════════════════════════════ -->
+<section class="section" id="bibtex">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1.25rem;">
+      <h2 class="section-title">BibTeX</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div style="position:relative;">
+          <button class="copy-btn" id="copy-bibtex">Copy</button>
+          <pre id="bibtex-text">@article{galappaththige2026gsdiff,
+  title   = {From Pixels to Primitives: Scene Change Detection
+             in 3D Gaussian Splatting},
+  author  = {Galappaththige, Chamuditha Jayanga and
+             Lai, Jason and
+             Patten, Timothy and
+             Dansereau, Donald and
+             Suenderhauf, Niko and
+             Miller, Dimity},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2026}
+}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     ACKNOWLEDGEMENTS
+════════════════════════════════════════════ -->
+<section class="section is-light-alt">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered" style="margin-bottom:1rem;">
+      <h2 class="section-title">Acknowledgements</h2>
+      <div class="section-divider"></div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-four-fifths has-text-centered">
+        <p style="font-size:.95rem; line-height:1.7; color:#555;">
+          This work was supported by the Australian Research Council Research Hub in Intelligent Robotic
+          Systems for Real-Time Asset Management (ARIAM) (IH210100030) and Abyss Solutions.
+          C.J., N.S., and D.M. also acknowledge ongoing support from the QUT Centre for Robotics.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        This page was built using the
+        <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a>,
+        which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+        Licensed under
+        <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<!-- Scripts -->
+<script src="static/js/index.js"></script>
+</body>
+</html>
